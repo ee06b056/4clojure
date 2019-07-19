@@ -59,9 +59,9 @@
 ;                   (into #{} (range 30)))))
 ; solution 1:
 (fn [set1 set2]
-  (into #{} 
-        (mapcat 
-         (fn [n1] 
+  (into #{}
+        (mapcat
+         (fn [n1]
            (map #(vector n1 %) set2)) set1)))
 ; solution 2:
 (fn [set1 set2]
@@ -72,13 +72,13 @@
 #(into #{} (for [x %1, y %2] [x y]))
 
 ; #99: Product Digits
-; 
+;
 ; Write a function which multiplies two numbers and returns the result as a sequence of its digits.
-; 
+;
 ; (= (__ 1 1) [1])
-; 
+;
 ; (= (__ 99 9) [8 9 1])
-; 
+;
 ; (= (__ 999 99) [9 8 9 0 1])
 ; solution 1:
 (fn [a b]
@@ -86,16 +86,16 @@
 
 ; #63: Group a Sequence
 ;
-; Given a function f and a sequence s, write a function which 
-; returns a map. The keys should be the values of f applied to 
-; each item in s. The value at each key should be a vector of 
+; Given a function f and a sequence s, write a function which
+; returns a map. The keys should be the values of f applied to
+; each item in s. The value at each key should be a vector of
 ; corresponding items in the order they appear in s.
-; 
+;
 ; (= (__ #(> % 5) [1 3 6 8]) {false [1 3], true [6 8]})
-; 
+;
 ; (= (__ #(apply / %) [[1 2] [2 4] [4 6] [3 6]])
 ;    {1/2 [[1 2] [2 4] [3 6]], 2/3 [[4 6]]})
-; 
+;
 ; (= (__ count [[1] [1 2] [3] [1 2 3] [2 3]])
 ;    {1 [[1] [3]], 2 [[1 2] [2 3]], 3 [[1 2 3]]})
 ; solution 1:
@@ -107,22 +107,77 @@
 #(apply merge-with into (for [v %2] {(%1 v) [v]}))
 
 ; #88: Symmetric Difference
-; 
-; Write a function which returns the symmetric difference of two sets. 
+;
+; Write a function which returns the symmetric difference of two sets.
 ; The symmetric difference is the set of items belonging to one but not both of the two sets.
-; 
+;
 ; (= (__ #{1 2 3 4 5 6} #{1 3 5 7}) #{2 4 6 7})
-; 
+;
 ; (= (__ #{:a :b :c} #{}) #{:a :b :c})
-; 
+;
 ; (= (__ #{} #{4 5 6}) #{4 5 6})
-; 
+;
 ; (= (__ #{[1 2] [2 3]} #{[2 3] [3 4]}) #{[1 2] [3 4]})
 ; solution 1:
 (fn [s1 s2]
   (let [s (clojure.set/union s1 s2)]
     (set (filter #(not= (s1 %) (s2 %)) s))))
 ; solution 2:
+#(clojure.set/union (clojure.set/difference %1 %2) (clojure.set/difference %2 %1))
+
+; #143: dot product
+;
+; Create a function that computes the dot product of two sequences.
+; You may assume that the vectors will have the same length.
+;
+; (= 0 (__ [0 1 0] [1 0 0]))
+;
+; (= 3 (__ [1 1 1] [1 1 1]))
+;
+; (= 32 (__ [1 2 3] [4 5 6]))
+;
+; (= 256 (__ [2 5 6] [100 10 1]))
+; solution 1:
+(fn [a b]
+  (apply + (map * a b)))
+#(apply + (map * %1 %2))
+; solution 2:
+(reduce + (map * %1 %2))
+
+; #122: Read a binary number
+;
+; Convert a binary number, provided in the form of a string, to its numerical value.
+;
+; (= 0     (__ "0"))
+;
+; (= 7     (__ "111"))
+;
+; (= 8     (__ "1000"))
+;
+; (= 9     (__ "1001"))
+;
+; (= 255   (__ "11111111"))
+;
+; (= 1365  (__ "10101010101"))
+;
+; (= 65535 (__ "1111111111111111"))
+; solution 1:
+(fn [bst]
+  (reduce (fn [carry n]
+            (if (= n \1)
+              (inc (* carry 2))
+              (* carry 2))) 0 bst))
+; solution 2:
+#(Integer/parseInt % 2)
+
+;; #126: Through the Looking Class
+;;
+;; Enter a value which satisfies the following:
+;;
+;; (let [x __]
+;;   (and (= (class x) x) x))
+Class
+
 
 
 
