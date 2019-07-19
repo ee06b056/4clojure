@@ -178,7 +178,135 @@
 ;;   (and (= (class x) x) x))
 Class
 
+;; 07/19/2019
+;; #135: Infix Calculator
+;;
+;; Your friend Joe is always whining about Lisps using the prefix notation for math.
+;; Show him how you could easily write a function that does math using the infix notation.
+;; Is your favorite language that flexible, Joe? Write a function that accepts a variable
+;; length mathematical expression consisting of numbers and the operations +, -, *, and /.
+;; Assume a simple calculator that does not do precedence and instead just calculates left to right.
+;;
+;; (= 7  (__ 2 + 5))
+;;
+;; (= 42 (__ 38 + 48 - 2 / 2))
+;;
+;; (= 8  (__ 10 / 2 - 1 * 2))
+;;
+;; (= 72 (__ 20 / 2 + 2 + 4 + 8 - 6 - 10 * 9))
+;; solution 1:
+(fn [init & args]
+  (reduce (fn [init-num [sym num]] (sym init-num num)) init (partition 2 args)))
+;; solution 2:
+(fn calc [& exp]
+  (reduce #(if (fn? %1) (%1 %2) (partial %2 %1)) exp))
 
+;; #157: Indexing Sequences
+;;
+;; Transform a sequence into a sequence of pairs containing the original elements along with their index.
+;;
+;; (= (__ [:a :b :c]) [[:a 0] [:b 1] [:c 2]])
+;;
+;; (= (__ [0 1 3]) '((0 0) (1 1) (3 2)))
+;;
+;; (= (__ [[:foo] {:bar :baz}]) [[[:foo] 0] [{:bar :baz} 1]])
+;; solution 1:
+(fn [sqn]
+  (map list sqn (iterate inc 0)))
+;; solution 2:
+#(map % (range))
+
+;; #97: Pascal's Triangle
+;;
+;; Pascal's triangle is a triangle of numbers computed using the following rules:
+;; - The first row is 1.
+;; - Each successive row is computed by adding together adjacent numbers in the row above,
+;; and adding a 1 to the beginning and end of the row.
+;;
+;; Write a function which returns the nth row of Pascal's Triangle.
+;;
+;; (= (__ 1) [1])
+;;
+;; (= (map __ (range 1 6))
+;;    [     [1]
+;;     [1 1]
+;;     [1 2 1]
+;;     [1 3 3 1]
+;;     [1 4 6 4 1]])
+;;
+;; (= (__ 11)
+;;    [1 10 45 120 210 252 210 120 45 10 1])
+;; solution 1:
+((fn foo [n]
+  (if (= n 1)
+    [1]
+    (concat [1] (map + (foo (dec n)) (rest (foo (dec n)))) [1]))) 2)
+;; solution 2:
+((fn foo [n]
+   (if (= n 1)
+     [1]
+     (let [pre (foo (dec n))]
+       (concat [1] (map + pre (rest pre)) [1]))))
+
+ ;; #118: Re-implement Map
+ ;;
+ ;; Map is one of the core elements of a functional programming language.
+ ;; Given a function f and an input sequence s, return a lazy sequence of (f x) for each element x in s.
+ ;;
+ ;;
+ ;; (= [3 4 5 6 7]
+ ;;    (__ inc [2 3 4 5 6]))
+ ;;
+ ;; (= (repeat 10 nil)
+ ;;    (__ (fn [_] nil) (range 10)))
+ ;;
+ ;; (= [1000000 1000001]
+ ;;    (->> (__ inc (range))
+ ;;         (drop (dec 1000000))
+ ;;         (take 2)))
+ ;; solution 1:
+(fn foo [f sqn]
+   (if (empty? sqn)
+     '()
+     (cons (f (first sqn)) (lazy-seq (foo f (rest sqn))))))
+ ;; solution 2:
+ (fn my-map [f sqn]
+   (lazy-seq (when-let [s (seq sqn)]
+               (cons (f (first s)) (my-map f (rest s))))))
+
+;; #95: To Tree, or not to Tree
+;;
+;; Write a predicate which checks whether or not a given sequence represents
+;; a binary tree. Each node in the tree must have a value, a left child, and a right child.
+;
+;;  true)
+;; (= (__ '(:a (:b nil nil) nil))
+;;    true)
+;
+;; (= (__ '(:a (:b nil nil)))
+;;    false)
+;
+;; (= (__ [1 nil [2 [3 nil nil] [4 nil nil]]])
+;;    true)
+;
+;; (= (__ [1 [2 nil nil] [3 nil nil] [4 nil nil]])
+;;    false)
+;
+;; (= (__ [1 [2 [3 [4 nil nil] nil] nil] nil])
+;;    true)
+;
+;; (= (__ [1 [2 [3 [4 false nil] nil] nil] nil])
+;;    false)
+;
+;; (= (__ '(:a nil ()))
+;;    false)
+;; (= (__ '(:a nil ()))
+;;    false)
+;; solution 1:
+ (fn foo [treenode]
+      (if (nil? treenode)
+      true
+      (and (sequential? treenode) (= (count treenode) 3) (foo (second treenode)) (foo (nth treenode 2)))))
 
 
 
