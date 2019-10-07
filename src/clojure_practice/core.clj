@@ -1,5 +1,6 @@
 (ns clojure-practice.core
   (:gen-class))
+
 ;; 07/17/2019
 ;; #62: Re-implement Iterate
 ;;
@@ -729,9 +730,9 @@ f vs
 ;;
 ;; (= (last (__ 100)) 541)
 ;; solution 1:
-(fn prime? [num])
-
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
+(fn [num] 
+  (let [prime? (fn [number]
+                 (if (= 0 (mod number 2))
+                   false
+                   (not-any? zero? (map mod (repeat number) (range 3 (/ number 2) 2)))))]
+    (cons 2 (take (dec num) (filter prime? (iterate inc 2))))))
