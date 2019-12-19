@@ -778,3 +778,43 @@ f vs
        (map read-string)
        (filter #(let [root (Math/sqrt %)] (== root (int root))))
        (clojure.string/join ",")))
+
+; #76: Intro to Trampoline
+;
+; The trampoline function takes a function f and a variable number of parameters. 
+; Trampoline calls f with any parameters that were supplied. If f returns a function, trampoline calls that function with no arguments. 
+; This is repeated, until the return value is not a function, and then trampoline returns that non-function value. 
+; This is useful for implementing mutually recursive algorithms in a way that won't consume the stack.
+;
+; #(bar (conj x y) y
+; (= __
+;    (letfn
+;      [(foo [x y] #(bar (conj x y) y))
+;       (bar [x y] (if (> (last x) 10)
+;                    x
+;                    #(foo x (+ 2 y))))]
+;      (trampoline foo [] 1)))
+[1 3 5 7 9 11]
+
+; #77: Anagram Finder
+;
+; Write a function which finds all the anagrams in a vector of words. 
+; A word x is an anagram of word y if all the letters in x can be rearranged in a different order to form y. 
+; Your function should return a set of sets, where each sub-set is a group of words which are anagrams of each other. 
+; Each sub-set should have at least two words. Words without any anagrams should not be included in the result.
+; 
+; (= (__ ["meat" "mat" "team" "mate" "eat"])
+;    #{#{"meat" "team" "mate"}})
+; 
+; (= (__ ["veer" "lake" "item" "kale" "mite" "ever"])
+;    #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})
+; (= (__ ["veer" "lake" "item" "kale" "mite" "ever"])
+;    #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})
+(fn [words]
+  (let [f0 (fn [])
+        f1 (fn
+             ([])
+             ([a])
+             ([a b]))]
+    (filter #(not= 1 (count %)) (reduce f1 words))))
+
