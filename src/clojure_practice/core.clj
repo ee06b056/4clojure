@@ -67,8 +67,8 @@
 ; solution 2:
 (fn [set1 set2]
   (into #{} (for [x set1
-        y set2]
-    [x y])))
+                  y set2]
+              [x y])))
 ; solution 3:
 #(into #{} (for [x %1, y %2] [x y]))
 
@@ -239,15 +239,15 @@ Class
 ;;    [1 10 45 120 210 252 210 120 45 10 1])
 ;; solution 1:
 ((fn foo [n]
-  (if (= n 1)
-    [1]
-    (concat [1] (map + (foo (dec n)) (rest (foo (dec n)))) [1]))) 2)
-;; solution 2:
-(fn foo [n]
    (if (= n 1)
      [1]
-     (let [pre (foo (dec n))]
-       (concat [1] (map + pre (rest pre)) [1]))))
+     (concat [1] (map + (foo (dec n)) (rest (foo (dec n)))) [1]))) 2)
+;; solution 2:
+(fn foo [n]
+  (if (= n 1)
+    [1]
+    (let [pre (foo (dec n))]
+      (concat [1] (map + pre (rest pre)) [1]))))
 
  ;; #118: Re-implement Map
  ;;
@@ -267,13 +267,13 @@ Class
  ;;         (take 2)))
  ;; solution 1:
 (fn foo [f sqn]
-   (if (empty? sqn)
-     '()
-     (cons (f (first sqn)) (lazy-seq (foo f (rest sqn))))))
+  (if (empty? sqn)
+    '()
+    (cons (f (first sqn)) (lazy-seq (foo f (rest sqn))))))
  ;; solution 2:
- (fn my-map [f sqn]
-   (lazy-seq (when-let [s (seq sqn)]
-               (cons (f (first s)) (my-map f (rest s))))))
+(fn my-map [f sqn]
+  (lazy-seq (when-let [s (seq sqn)]
+              (cons (f (first s)) (my-map f (rest s))))))
 
 ;; #95: To Tree, or not to Tree
 ;;
@@ -304,10 +304,10 @@ Class
 ;; (= (__ '(:a nil ()))
 ;;    false)
 ;; solution 1:
- (fn foo [treenode]
-      (if (nil? treenode)
-      true
-      (and (sequential? treenode) (= (count treenode) 3) (foo (second treenode)) (foo (nth treenode 2)))))
+(fn foo [treenode]
+  (if (nil? treenode)
+    true
+    (and (sequential? treenode) (= (count treenode) 3) (foo (second treenode)) (foo (nth treenode 2)))))
 
 ;; 07/23/2019
 ;; #120: Sum of square of digits
@@ -388,13 +388,13 @@ f vs
 ;; (== (__ 7 5/7 2 3/5) 210)
 ;; solution 1:
 (fn [& nums]
-   (let [max-common-div (fn [a b]
-                          (if (= 0 b)
-                            a
-                            (recur b (mod a b))))
-         lest-common-mul (fn [a b]
-                           (/ (* a b) (max-common-div a b)))]
-     (reduce lest-common-mul nums)))
+  (let [max-common-div (fn [a b]
+                         (if (= 0 b)
+                           a
+                           (recur b (mod a b))))
+        lest-common-mul (fn [a b]
+                          (/ (* a b) (max-common-div a b)))]
+    (reduce lest-common-mul nums)))
 
 ;; #96: Beauty is Symmetry
 ;;
@@ -483,8 +483,8 @@ f vs
   (apply (partial assoc {})
          (mapcat (fn [[okey nval]]
                    (mapcat (fn [[ikey value]]
-                          [[okey ikey] value])
-                        nval))
+                             [[okey ikey] value])
+                           nval))
                  m)))
 ;; solution 2:
 #(into {} (for [[k1 v1] % [k2 v2] v1] [[k1 k2] v2]))
@@ -637,8 +637,8 @@ f vs
 ;; solution 1:
 (fn [sqn]
   (reduce #(if ((set %1) %2)
-              %1
-              (conj %1 %2)) [] sqn))
+             %1
+             (conj %1 %2)) [] sqn))
 
 ;; #58: Function Composition
 ;;
@@ -672,12 +672,12 @@ f vs
 ;; (= (__ 3 (range 8)) '((0 1 2) (3 4 5)))
 ;; solution 1:
 (fn [n sqn]
-   (let [my-partition
-         (fn foo [n sqn]
-           (let [p (take n sqn)]
-             (if (= n (count p))
-               (cons p (foo n (nthrest sqn n))))))]
-     (filter #(= n (count %)) (my-partition n sqn))))
+  (let [my-partition
+        (fn foo [n sqn]
+          (let [p (take n sqn)]
+            (if (= n (count p))
+              (cons p (foo n (nthrest sqn n))))))]
+    (filter #(= n (count %)) (my-partition n sqn))))
 ;; solution 2:
 (fn p [n c]
   (when (and (seq c) (>= (count c) n))
@@ -730,7 +730,7 @@ f vs
 ;;
 ;; (= (last (__ 100)) 541)
 ;; solution 1:
-(fn [num] 
+(fn [num]
   (let [prime? (fn [number]
                  (if (= 0 (mod number 2))
                    false
@@ -811,10 +811,256 @@ f vs
 ; (= (__ ["veer" "lake" "item" "kale" "mite" "ever"])
 ;    #{#{"veer" "ever"} #{"lake" "kale"} #{"mite" "item"}})
 (fn [words]
-  (let [f0 (fn [])
-        f1 (fn
-             ([])
-             ([a])
-             ([a b]))]
-    (filter #(not= 1 (count %)) (reduce f1 words))))
+  (set (map set (filter #(> (count %) 1) (vals (group-by sort words))))))
 
+; #60: Sequence Reductions
+;
+; Write a function which behaves like reduce, but returns each intermediate value of the reduction. 
+; Your function must accept either two or three arguments, and the return sequence must be lazy.
+; 	
+; (= (take 5 (__ + (range))) [0 1 3 6 10])
+; 	
+; (= (__ conj [1] [2 3 4]) [[1] [1 2] [1 2 3] [1 2 3 4]])
+; 
+; (= (last (__ * 2 [3 4 5])) (reduce * 2 [3 4 5]) 120)
+(defn my-reductions
+  ([f col]
+   (my-reductions f (first col) (rest col)))
+  ([f acc col]
+   (cons acc
+         (lazy-seq
+          (when (seq col)
+            (my-reductions f (f acc (first col)) (rest col)))))))
+
+;; #80: Perfect Numbers
+;; 
+;; A number is "perfect" if the sum of its divisors equal the number itself. 6 is a perfect number 
+;; because 1+2+3=6. Write a function which returns true for perfect numbers and false otherwise.
+;; 
+;; (= (__ 6) true)
+;; 
+;; (= (__ 7) false)
+;; 
+;; (= (__ 496) true)
+;; 
+;; (= (__ 500) false)
+;; 
+;; (= (__ 8128) true)
+(fn [n]
+  (= n
+     (reduce
+      +
+      (filter #(zero? (mod n %)) (range 1 n)))))
+
+;; #69: Merge with a Function
+;;
+;; Write a function which takes a function f and a variable number of maps. 
+;; Your function should return a map that consists of the rest of the maps conj-ed onto the first. 
+;; If a key occurs in more than one map, the mapping(s) from the latter (left-to-right) should be 
+;; combined with the mapping in the result by calling (f val-in-result val-in-latter)
+;; 
+;; (= (__ * {:a 2, :b 3, :c 4} {:a 2} {:b 2} {:c 5})
+;;    {:a 4, :b 6, :c 20})
+;; 
+;; (= (__ - {1 10, 2 20} {1 3, 2 10, 3 15})
+;;    {1 7, 2 10, 3 15})
+;; 
+;; (= (__ concat {:a [3], :b [6]} {:a [4 5], :c [8 9]} {:b [7]})
+;;    {:a [3 4 5], :b [6 7], :c [8 9]})
+(fn [f & maps]
+  (reduce
+   (fn [m1 m2]
+     (reduce
+      (fn [accm [k v]]
+        (if (contains? accm k)
+          (update-in accm [k] f v)
+          (assoc accm k v)))
+      m1
+      m2))
+   maps))
+
+;; #102: intoCamelCase
+;; 
+;; When working with java, you often need to create an object with fieldsLikeThis,
+;; but you'd rather work with a hashmap that has :keys-like-this until it's time to convert. 
+;; Write a function which takes lower-case hyphen-separated strings and converts them to camel-case strings.
+;; 
+;; (= (__ "something") "something")
+;; 
+;; (= (__ "multi-word-key") "multiWordKey")
+;; 
+;; (= (__ "leaveMeAlone") "leaveMeAlone")
+(fn [s]
+  (let [ss (clojure.string/split s #"-")]
+    (apply str (first ss) (map clojure.string/capitalize (rest ss)))))
+
+; #75: Euler's Totient Function
+;
+; Two numbers are coprime if their greatest common divisor equals 1. 
+; Euler's totient function f(x) is defined as the number of positive 
+; integers less than x which are coprime to x. The special case f(1) equals 1. 
+; Write a function which calculates Euler's totient function.
+;
+; (= (__ 1) 1)
+;
+; (= (__ 10) (count '(1 3 7 9)) 4)
+;
+; (= (__ 40) 16)
+;
+; (= (__ 99) 60)
+(fn [n]
+  (let [isCoprime (fn [a b]
+                    (let [gcd (fn gcd [a b]
+                                (if (= 0 (mod a b))
+                                  b
+                                  (gcd b (mod a b))))]
+                      (= 1 (gcd a b))))]
+    (if (= 1 n)
+      1
+      (count (filter (partial isCoprime n) (range 1 n))))))
+
+; #86: Happy numbers
+;
+; Happy numbers are positive integers that follow a particular formula: 
+; take each individual digit, square it, and then sum the squares to get
+ ; a new number. Repeat with the new number and eventually, you might get 
+; to a number whose squared sum is 1. This is a happy number. An unhappy 
+; number (or sad number) is one that loops endlessly. Write a function that 
+; determines if a number is happy or not.
+;
+; (= (__ 7) true)
+;
+; (= (__ 986543210) true)
+;
+; (= (__ 2) false)
+;
+; (= (__ 3) false)
+(fn [n]
+  (let [get-all-digits (fn get-all-digits [n]
+                         (let [q (quot n 10)
+                               m (mod n 10)]
+                           (cons m (when (> q 0) (get-all-digits q)))))
+        sqr-sum (fn [digits]
+                  (apply + (map #(* % %) digits)))]
+    (loop [n n
+           val-history #{}]
+      (let [s (sqr-sum (get-all-digits n))]
+        (cond
+          (= 1 s) true
+          (val-history s) false
+          :else (recur s (conj val-history s)))))))
+
+; #78: Reimplement Trampoline
+;
+; Reimplement the function described in "Intro to Trampoline".
+;
+; (= (letfn [(triple [x] #(sub-two (* 3 x)))
+;           (sub-two [x] #(stop?(- x 2)))
+;           (stop? [x] (if (> x 50) x #(triple x)))]
+;     (__ triple 2))
+;   82)
+;
+; (= (letfn [(my-even? [x] (if (zero? x) true #(my-odd? (dec x))))
+;           (my-odd? [x] (if (zero? x) false #(my-even? (dec x))))]
+;     (map (partial __ my-even?) (range 6)))
+;   [true false true false true false])
+(fn [f & args]
+  (let [res (apply f args)]
+    (if (fn? res)
+      (loop [f (res)]
+        (if (fn? f)
+          (recur (f))
+          f))
+      res)))
+
+#(->> (%1 %2)
+      (iterate (fn [f] (f)))
+      (drop-while fn?)
+      (first))
+
+; #115: The Balance of N
+;
+; A balanced number is one whose component digits have the same sum on the 
+; left and right halves of the number. Write a function which accepts an 
+; integer n, and returns true iff n is balanced.
+;
+; (= true (__ 11))
+;
+; (= true (__ 121))
+;
+; (= false (__ 123))
+;
+; (= true (__ 0))
+;
+; (= false (__ 88099))
+;
+; (= true (__ 89098))
+;
+; (= true (__ 89089))
+;
+; (= (take 20 (filter __ (range)))
+;    [0 1 2 3 4 5 6 7 8 9 11 22 33 44 55 66 77 88 99 101])
+(fn [n]
+  (let [get-all-digits (fn get-all-digits [n]
+                         (let [q (quot n 10)
+                               m (mod n 10)]
+                           (cons m (when (> q 0) (get-all-digits q)))))
+        all-digits (get-all-digits n)
+        half-length (quot (count all-digits) 2)]
+    (= (apply + (take half-length all-digits))
+       (apply + (drop (- (count all-digits) half-length) all-digits)))))
+
+; #85: Power Set
+;
+; Write a function which generates the power set of a given set. 
+; The power set of a set x is the set of all subsets of x, including the empty set and x itself.
+;
+; (= (__ #{1 :a}) #{#{1 :a} #{:a} #{} #{1}})
+;
+; (= (__ #{}) #{#{}})
+;
+; (= (__ #{1 2 3})
+;    #{#{} #{1} #{2} #{3} #{1 2} #{1 3} #{2 3} #{1 2 3}})
+;
+; (= (count (__ (into #{} (range 10)))) 1024)
+(fn [s]
+  (reduce (fn [acc e]
+            (into acc (map #(conj % e) acc)))
+          #{#{}}
+          s))
+
+
+(comment
+  "experiment space"
+  (into #{#{}} '(#{:a} #{:a 1}))
+  (range 1 3)
+  (conj #{} :a)
+  (conj #{} :a)
+  (concat #{1} #{:a})
+  (reduce #(prn %2)
+          #{}
+          #{:a 1 :b "bv"})
+  (seq '())
+  (let [f1 #(->> (%1 %2))]
+    (f1 + 1))
+  (quot 1 2)
+  (mod 11 10)
+  (mod 13 5)
+  (mod 5 3)
+  (mod 3 2)
+  (mod 2 1)
+  (mod 1 0)
+  (let [get-all-digits (fn get-all-digits [n]
+                         (let [q (quot n 10)
+                               m (mod n 10)]
+                           (cons m (when (> q 0) (get-all-digits q)))))]
+    (get-all-digits 0))
+  (quot 123 10)
+  (mod 123 10)
+  (let [gcd (fn gcd [a b]
+              (if (= 0 (mod a b))
+                b
+                (gcd b (mod a b))))
+        isCoprime (fn [a b]
+                    (= 1 (gcd a b)))]
+    (gcd 4 2)))
