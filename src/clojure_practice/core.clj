@@ -1053,10 +1053,65 @@ f vs
        (map #(into #{} %))
        (into #{})))
 
+; #105: Identify keys and values
+;
+; Given an input sequence of keywords and numbers, 
+; create a map such that each key in the map is a keyword, 
+; and the value is a sequence of all the numbers (if any) 
+; between it and the next keyword in the sequence.
+;
+; (= {} (__ []))
+;
+; (= {:a [1]} (__ [:a 1]))
+;
+; (= {:a [1], :b [2]} (__ [:a 1, :b 2]))
+;
+; (= {:a [1 2 3], :b [], :c [4]} (__ [:a 1 2 3 :b :c 4]))
+(fn kv [acc k [v & vs]]
+  (cond
+    (nil? v) acc
+    (keyword? v) (kv (assoc acc v []) v vs)
+    :else (kv (update-in acc [k] conj v) k vs))) {} nil
 
+; #137: Digits and bases
+;
+; Write a function which returns a sequence of digits of a 
+; non-negative number (first argument) in numerical system 
+; with an arbitrary base (second argument). Digits should be 
+; represented with their integer values, e.g. 15 would be [1 5] 
+; in base 10, [1 1 1 1] in base 2 and [15] in base 16.
+;
+; (= [1 2 3 4 5 0 1] (__ 1234501 10))
+;
+; (= [0] (__ 0 11))
+;
+; (= [1 0 0 1] (__ 9 2))
+;
+; (= [1 0] (let [n (rand-int 100000)](__ n n)))
+;
+; (= [16 18 5 24 15 1] (__ Integer/MAX_VALUE 42))
+(fn [n b]
+  (if (> n 0)
+    (loop [n n
+           b b
+           res []]
+      (if (> n 0)
+        (recur (quot n b) b (conj res (mod n b)))
+        (reverse res)))
+    [0]))
+; better one:
+((fn base [n b]
+  (if (>= n b)
+    (conj (base (quot n b) b) (mod n b))
+    [n])) 9 2)
 
 (comment
   "experiment space"
+  (partition-by keyword? [:a 1 2 3 :b :c 4])
+  (conj '() 1)
+  (quot 123542312 2)
+  (conj [1] 2)
+  (reverse [1 2 3])
   (let [f #(* % %)
         col #{0 1 2 -1 -2}]
     (into #{} (map #(into #{} %) (vals (group-by f col)))))
