@@ -1105,8 +1105,75 @@ f vs
     (conj (base (quot n b) b) (mod n b))
     [n])) 9 2)
 
+;; #144: Oscilrate
+;; 
+;; Write an oscillating iterate: a function that takes an initial value 
+;; and a variable number of functions. It should return a lazy sequence 
+;; of the functions applied to the value in order, restarting from the 
+;; first function after it hits the end.
+;;
+;; (= (take 3 (__ 3.14 int double)) [3.14 3 3.0])
+;;
+;; (= (take 5 (__ 3 #(- % 3) #(+ 5 %))) [3 0 5 2 7])
+;;
+;; (= (take 12 (__ 0 inc dec inc dec inc)) [0 1 0 1 0 1 2 1 2 1 2 3])
+(fn f [n & [f1 & fs]]
+  (lazy-seq
+   (cons n (apply f (f1 n) (concat fs (list f1))))))
+
+;; #158: Decurry
+;;
+;; Write a function that accepts a curried function of unknown arity n. 
+;; Return an equivalent function of n arguments.
+;;
+;; (= 10 ((__ (fn [a]
+;;              (fn [b]
+;;                (fn [c]
+;;                  (fn [d]
+;;                    (+ a b c d))))))
+;;        1 2 3 4))
+;;
+;; (= 24 ((__ (fn [a]
+;;              (fn [b]
+;;                (fn [c]
+;;                  (fn [d]
+;;                    (* a b c d))))))
+;;        1 2 3 4))
+;;
+;; (= 25 ((__ (fn [a]
+;;              (fn [b]
+;;                (* a b))))
+;;        5 5))
+(fn [f]
+  (fn [& args]
+    (loop [f f
+           args args]
+      (if (seq args)
+        (recur (f (first args)) (rest args))
+        f))))
+;; better one:
+(fn [f]
+  (fn [& args]
+    (reduce #(%1 %2) f args)))
+
 (comment
   "experiment space"
+  (lazy-seq
+   )
+  (let [f (fn f [n & [f1 & fs]]
+            (lazy-seq
+             (cons n (apply f (f1 n) (concat fs (list f1))))))]
+    (take 5 (f 1 inc dec)))
+  (let [f (fn ff [n & [f1 & fs]]
+            (let [tmp (f1 n)]
+              (lazy-seq (cons tmp (apply ff tmp (concat fs '(f1)))))))]
+    (take 5 (f 3 inc dec)))
+  (let [f (fn f [a]
+            (lazy-seq (cons (inc a) (f (inc a)))))]
+    (take 5 (f 1)))
+  (cons 4 '(1 2 3))
+  (conj '(1 2 3) 4)
+  (concat '(1 2 3) '(4))
   (partition-by keyword? [:a 1 2 3 :b :c 4])
   (conj '() 1)
   (quot 123542312 2)
