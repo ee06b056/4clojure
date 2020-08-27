@@ -1182,8 +1182,34 @@ f vs
     (lazy-seq
      (cons next-col (lazy-sp next-col)))))
 
+;; #108: Lazy Searching
+;;
+;; Given any number of sequences, each sorted from smallest 
+;; to largest, find the smallest single number which appears 
+;; in all of the sequences. The sequences may be infinite, so 
+;; be careful to search lazily.
+;;
+;; (= 3 (__ [3 4 5]))
+;;
+;; (= 4 (__ [1 2 3 4 5 6 7] [0.5 3/2 4 19]))
+;;
+;; (= 7 (__ (range) (range 0 100 7/6) [2 3 5 7 11 13]))
+;;
+;; (= 64 (__ (map #(* % % %) (range)) ;; perfect cubes
+;;           (filter #(zero? (bit-and % (dec %))) (range)) ;; powers of 2
+;;           (iterate inc 20))) ;; at least as large as 20
+(fn [& cols]
+  (if (= 1 (count cols))
+    (first (first cols))
+    (let [heads (map first cols)
+          largest (apply max heads)]
+      (if (apply = heads)
+        largest
+        (recur (map (fn [col] (drop-while #(< % largest) col)) cols))))))
+
 (comment
   "experiment space"
+  (take 10 (iterate inc 20))
   (lazy-seq
    )
   (->> '(1 1 1 2 2 1)
