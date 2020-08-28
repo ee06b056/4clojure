@@ -1207,8 +1207,52 @@ f vs
         largest
         (recur (map (fn [col] (drop-while #(< % largest) col)) cols))))))
 
+;; #93: Partially Flatten a Sequence
+;; 
+;; Write a function which flattens any 
+;; nested combination of sequential things 
+;; (lists, vectors, etc.), but maintains the 
+;; lowest level sequential items. The result 
+;; should be a sequence of sequences with only one level of nesting.
+;;
+;; (= (__ [["Do"] ["Nothing"]])
+;;    [["Do"] ["Nothing"]])
+;;
+;; (= (__ [[[[:a :b]]] [[:c :d]] [:e :f]])
+;;    [[:a :b] [:c :d] [:e :f]])
+;;
+;; (= (__ '((1 2)((3 4)((((5 6)))))))
+;;    '((1 2)(3 4)(5 6)))
+(fn pfs [tree]
+  (if (every? sequential? tree)
+    (mapcat pfs tree)
+    [tree]))
+
 (comment
   "experiment space"
+  (let [pfs (fn pfs [cols]
+              (map (fn [col]
+                        (if (not-any? sequential? col)
+                          col
+                          (pfs col)))
+                      cols))]
+    (pfs [["do"] [["nothing"]]]))
+  (let [flatten (fn flatten [col]
+                  (if (every? sequential? col)
+                    (mapcat flatten col)
+                    [col]))]
+    (flatten [[:a] [[:b]]]))
+  ((fn f [tree] (if (every? (complement sequential?) tree)
+                [tree]
+                (mapcat f tree))) [:a [:b]])
+  ((fn [col] (map (fn [a] (if (coll? a) (first a) a)) col)) [:a [:b]])
+  (not-any? sequential? [["nothing"]])
+  (map identity [["do"] ["nothing"]])
+  (not-any? sequential? ["do"])
+  (seq? "a")
+  (sequential? '(1))
+  (every? (comp not sequential?) [1 2 3])
+  (not-any? sequential? [1 2 3])
   (take 10 (iterate inc 20))
   (lazy-seq
    )
