@@ -1228,8 +1228,49 @@ f vs
     (mapcat pfs tree)
     [tree]))
 
+;; #114: Global take-while
+;;
+;; take-while is great for filtering sequences, but it limited: 
+;; you can only examine a single item of the sequence at a time. 
+;; What if you need to keep track of some state as you go over the sequence?
+;;
+;; Write a function which accepts an integer n, a predicate p, and a sequence. 
+;; It should return a lazy sequence of items in the list up to, but not including, 
+;; the nth item that satisfies the predicate.
+;;
+;; (= [2 3 5 7 11 13]
+;;    (__ 4 #(= 2 (mod % 3))
+;;          [2 3 5 7 11 13 17 19 23]))
+;;
+;; (= ["this" "is" "a" "sentence"]
+;;    (__ 3 #(some #{\i} %)
+;;          ["this" "is" "a" "sentence" "i" "wrote"]))
+;;
+;; (= ["this" "is"]
+;;    (__ 1 #{"a"}
+;;          ["this" "is" "a" "sentence" "i" "wrote"]))
+(fn g-take-while [n pred col]
+  (lazy-seq
+   (when (and (> n 0) (seq col))
+     (cond
+       (and (pred (first col)) (> n 1))
+       (cons (first col) (g-take-while (dec n) pred (rest col)))
+       
+       (not (pred (first col)))
+       (cons (first col) (g-take-while n pred (rest col)))))))
+
 (comment
   "experiment space"
+  ((fn g-take-while [n pred col]
+     (lazy-seq
+      (when (and (> n 1) (seq col))
+        (prn "n: "n "seq: " col)
+        (if (pred (first col))
+          (cons (first col) (g-take-while (dec n) pred (rest col)))
+          (cons (first col) (g-take-while n pred (rest col)))))))
+   4
+   #(= 2 (mod % 3))
+   [2 3 4 5 6 7 8 9 10 11 12 13 14 15])
   (let [pfs (fn pfs [cols]
               (map (fn [col]
                         (if (not-any? sequential? col)
