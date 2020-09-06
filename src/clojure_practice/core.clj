@@ -1259,12 +1259,82 @@ f vs
        (not (pred (first col)))
        (cons (first col) (g-take-while n pred (rest col)))))))
 
+;; #132: Insert between two items
+;;
+;; Write a function that takes a two-argument predicate, 
+;; a value, and a collection; and returns a new collection 
+;; where the value is inserted between every two items that satisfy the predicate.
+;;
+;; (= '(1 :less 6 :less 7 4 3) (__ < :less [1 6 7 4 3]))
+;;
+;; (= '(2) (__ > :more [2]))
+;;
+;; (= [0 1 :x 2 :x 3 :x 4]  (__ #(and (pos? %) (< % %2)) :x (range 5)))
+;;
+;; (empty? (__ > :more ()))
+;;
+;; (= [0 1 :same 1 2 3 :same 5 8 13 :same 21]
+;;    (take 12 (->> [0 1]
+;;                  (iterate (fn [[a b]] [b (+ a b)]))
+;;                  (map first) ; fibonacci numbers
+;;                  (__ (fn [a b] ; both even or both odd
+;;                        (= (mod a 2) (mod b 2)))
+(fn [c v s]
+  (mapcat (fn [[a b]] (if (and a b (c a b)) (list a v) (list a)))
+          (partition-all 2 1 s)))
+
+;; #104: Write Roman Numerals
+;;
+;; This is the inverse of Problem 92, but much easier. 
+;; Given an integer smaller than 4000, return the corresponding 
+;; roman numeral in uppercase, adhering to the subtractive principle.
+;;
+;; (= "I" (__ 1))
+;;
+;; (= "XXX" (__ 30))
+;;
+;; (= "IV" (__ 4))
+;;
+;; (= "CXL" (__ 140))
+;;
+;; (= "DCCCXXVII" (__ 827))
+;;
+;; (= "MMMCMXCIX" (__ 3999))
+;;
+;; (= "XLVIII" (__ 48))
+(fn [n]
+  (let [numerals {"M" 1000 "CM" 900 "D" 500 "CD" 400 "C" 100 "XC" 90
+                  "L" 50 "XL" 40 "X" 10 "IX" 9 "V" 5 "IV" 4 "I" 1}
+        dec->roma (fn [n]
+                    (loop [n n
+                           [[c v] & nums :as all] (reverse (sort-by val numerals))
+                           acc []]
+                      (cond
+                        (zero? n) (apply str acc)
+                        (> v n) (recur n nums acc)
+                        :else (recur (- n v) all (conj acc c)))))]
+    (dec->roma n)))
+
 (comment
   "experiment space"
+  (def numerals {"M" 1000 "CM" 900 "D" 500 "CD" 400 "C" 100 "XC" 90
+                 "L" 50 "XL" 40 "X" 10 "IX" 9 "V" 5 "IV" 4 "I" 1})
+  (sort-by val numerals)
+  ((fn [pred v col]
+     (reduce
+      (fn [acc e]
+        (if (seq acc)
+          (if (pred (last acc) e)
+            (conj acc v e)
+            (conj acc e))
+          [e]))
+      []
+      col)) < :less [1 6 7 4 3])
+  (conj [2 3] 1)
   ((fn g-take-while [n pred col]
      (lazy-seq
       (when (and (> n 1) (seq col))
-        (prn "n: "n "seq: " col)
+        (prn "n: " n "seq: " col)
         (if (pred (first col))
           (cons (first col) (g-take-while (dec n) pred (rest col)))
           (cons (first col) (g-take-while n pred (rest col)))))))
@@ -1273,10 +1343,10 @@ f vs
    [2 3 4 5 6 7 8 9 10 11 12 13 14 15])
   (let [pfs (fn pfs [cols]
               (map (fn [col]
-                        (if (not-any? sequential? col)
-                          col
-                          (pfs col)))
-                      cols))]
+                     (if (not-any? sequential? col)
+                       col
+                       (pfs col)))
+                   cols))]
     (pfs [["do"] [["nothing"]]]))
   (let [flatten (fn flatten [col]
                   (if (every? sequential? col)
@@ -1284,8 +1354,8 @@ f vs
                     [col]))]
     (flatten [[:a] [[:b]]]))
   ((fn f [tree] (if (every? (complement sequential?) tree)
-                [tree]
-                (mapcat f tree))) [:a [:b]])
+                  [tree]
+                  (mapcat f tree))) [:a [:b]])
   ((fn [col] (map (fn [a] (if (coll? a) (first a) a)) col)) [:a [:b]])
   (not-any? sequential? [["nothing"]])
   (map identity [["do"] ["nothing"]])
