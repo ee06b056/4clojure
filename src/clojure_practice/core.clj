@@ -1315,8 +1315,75 @@ f vs
                         :else (recur (- n v) all (conj acc c)))))]
     (dec->roma n)))
 
+;; #103: Generating k-combinations
+;;
+;; Given a sequence S consisting of n elements generate 
+;; all k-combinations of S, i. e. generate all possible 
+;; sets consisting of k distinct elements taken from S. 
+;; The number of k-combinations for a sequence is equal to the binomial coefficient.
+;;
+;; (= (__ 1 #{4 5 6}) #{#{4} #{5} #{6}})
+;;
+;; (= (__ 10 #{4 5 6}) #{})
+;;
+;; (= (__ 2 #{0 1 2}) #{#{0 1} #{0 2} #{1 2}})
+;;
+;; (= (__ 3 #{0 1 2 3 4}) #{#{0 1 2} #{0 1 3} #{0 1 4} #{0 2 3} #{0 2 4}
+;;                          #{0 3 4} #{1 2 3} #{1 2 4} #{1 3 4} #{2 3 4}})
+;;
+;; (= (__ 4 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a "abc" "efg"}})
+;;
+;; (= (__ 2 #{[1 2 3] :a "abc" "efg"}) #{#{[1 2 3] :a} #{[1 2 3] "abc"} #{[1 2 3] "efg"}
+;;                                     #{:a "abc"} #{:a "efg"} #{"abc" "efg"}})
+(fn combinations [k s]
+  (cond
+    (zero? k) #{#{}}
+    (empty? s) #{}
+    :else (set (clojure.set/union
+                (map #(conj % (first s)) (combinations (dec k) (rest s)))
+                (combinations k (rest s))))))
+
+;; #116: Prime Sandwich
+;;
+;; A balanced prime is a prime number which is 
+;; also the mean of the primes directly before 
+;; and after it in the sequence of valid primes. 
+;; Create a function which takes an integer n, 
+;; and returns true iff it is a balanced prime.
+;;
+;; (= false (__ 4))
+;;
+;; (= true (__ 563))
+;;
+;; (= 1103 (nth (filter __ (range)) 15))
+(fn balanced-prime? [n]
+  (let [factors (cons 2 (iterate (partial + 2) 3))
+        prime? (fn [n] (not-any? #(zero? (mod n %))
+                                 (take-while #(<= % (inc (Math/sqrt n))) factors)))
+        prime-step (fn [n s] (first (drop-while (complement prime?) (rest (iterate (partial + s) n)))))]
+    (and (> n 3)
+         (prime? n)
+         (= n (/ (+ (prime-step n 2) (prime-step n -2)) 2)))))
+
 (comment
   "experiment space"
+  ((fn [n]
+     (every? #(not= (/ n %) (quot n %)) (concat [2] (range 3 (inc (/ n 2)) 2)))) 5)
+  (range 2 10 2)
+  (range 3 (inc (/ 23 2)) 2)
+  (= (/ 10 2) (quot 10 2))
+  (quot 10 3)
+  (let [combination (fn combinations [k s]
+                      (cond
+                        (zero? k) #{#{}}
+                        (> k (count s)) #{}
+                        (empty? s) #{}
+                        :else (set (clojure.set/union
+                                    (map #(conj % (first s)) (combinations (dec k) (rest s)))
+                                    (combinations k (rest s))))))]
+    (combination 1 #{4}))
+  (clojure.set/union #{#{}} #{#{1}})
+  (rest #{6 5 4})
   (def numerals {"M" 1000 "CM" 900 "D" 500 "CD" 400 "C" 100 "XC" 90
                  "L" 50 "XL" 40 "X" 10 "IX" 9 "V" 5 "IV" 4 "I" 1})
   (sort-by val numerals)
