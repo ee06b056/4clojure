@@ -1365,8 +1365,72 @@ f vs
          (prime? n)
          (= n (/ (+ (prime-step n 2) (prime-step n -2)) 2)))))
 
+;; #121: Universal Computation Engine
+;;
+;; Given a mathematical formula in prefix notation, 
+;; return a function that calculates the value of the formula. 
+;; The formula can contain nested calculations using the four 
+;; basic mathematical operators, numeric constants, and symbols 
+;; representing variables. The returned function has to accept 
+;; a single parameter containing the map of variable names to their values.
+;;
+;; (= 2 ((__ '(/ a b))
+;;       '{b 8 a 16}))
+;;
+;; (= 8 ((__ '(+ a b 2))
+;;       '{a 2 b 4}))
+;;
+;; (= [6 0 -4]
+;;      (map (__ '(* (+ 2 a)
+;;                   (- 10 b)))
+;;             '[{a 1 b 8}
+;;               {b 5 a -2}
+;;               {a 2 b 11}]))
+;;
+;; (= 1 ((__ '(/ (+ x 2)
+;;               (* 3 (+ y 1))))
+;;       '{x 4 y 1}))
+(fn [exp]
+  (fn [v-map]
+    (let [f (fn f [e v-map]
+              (if (seq? e)
+                (case (first e)
+                  + (apply + (map f (rest e) (repeat v-map)))
+                  - (apply - (map f (rest e) (repeat v-map)))
+                  * (apply * (map f (rest e) (repeat v-map)))
+                  / (apply / (map f (rest e) (repeat v-map))))
+                (if (number? e)
+                  e
+                  (get v-map e))))]
+      (f exp v-map))))
+
 (comment
   "experiment space"
+  (let [uce (fn [exp]
+              (fn [v-map]
+                (let [f (fn f [e v-map]
+                          (if (seq? e)
+                            (case (first e)
+                              + (apply + (map f (rest e) (repeat v-map)))
+                              - (apply - (map f (rest e) (repeat v-map)))
+                              * (apply * (map f (rest e) (repeat v-map)))
+                              / (apply / (map f (rest e) (repeat v-map))))
+                            (if (number? e)
+                              e
+                              (get v-map e))))]
+                  (f exp v-map))))]
+    ((uce '(+ a 2 3)) '{a 3}))
+  (let [f (fn [exp] (case (first exp)
+                      '+ (prn "+")))]
+    (f '(+ 1 2)))
+  (let [f (fn [sym m] (prn m) (get m sym))]
+    (f 'a '{a 1}))
+  (apply - '(3 2 1))
+  (/ 8 2)
+  (- 3 2 1)
+  (seq? (list 1 2 3))
+  (let [f (fn [[a b c]] (= '+ a))]
+    (f '(+ 1 2)))
   ((fn [n]
      (every? #(not= (/ n %) (quot n %)) (concat [2] (range 3 (inc (/ n 2)) 2)))) 5)
   (range 2 10 2)
@@ -1432,8 +1496,7 @@ f vs
   (every? (comp not sequential?) [1 2 3])
   (not-any? sequential? [1 2 3])
   (take 10 (iterate inc 20))
-  (lazy-seq
-   )
+  (lazy-seq)
   (->> '(1 1 1 2 2 1)
        (partition-by identity)
        (mapcat #(list (count %) (first %))))
