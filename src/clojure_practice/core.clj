@@ -1404,8 +1404,130 @@ f vs
                   (get v-map e))))]
       (f exp v-map))))
 
+;; #171: Intervals
+;;
+;; Write a function that takes a sequence of integers and returns 
+;; a sequence of "intervals". Each interval is a a vector of two 
+;; integers, start and end, such that all integers between start 
+;; and end (inclusive) are contained in the input sequence.
+;;
+;; (= (__ [1 2 3]) [[1 3]])
+;;
+;; (= (__ [10 9 8 1 2 3]) [[1 3] [8 10]])
+;;
+;; (= (__ [1 1 1 1 1 1 1]) [[1 1]])
+;;
+;; (= (__ []) [])
+;;
+;; (= (__ [19 4 17 1 3 10 2 13 13 2 16 4 2 15 13 9 6 14 2 11])
+;;        [[1 4] [6 6] [9 11] [13 17] [19 19]])
+(fn [col]
+  (let [col (sort col)
+        fst (first col)]
+    (if fst
+      (reduce (fn [acc e]
+                (let [c (count acc)
+                      tmp (get-in acc [(dec c) 1])]
+                  (cond
+                    (= tmp e) acc
+                    (= (inc tmp) e) (assoc-in acc [(dec c) 1] e)
+                    :else (assoc acc c [e e]))))
+              [[fst fst]] 
+              col)
+      [])))
+
+;; #148: The Big Divide
+;;
+;; Write a function which calculates the sum of all natural numbers under 
+;; n (first argument) which are evenly divisible by at least one of a and 
+;; b (second and third argument). Numbers a and b are guaranteed to be coprimes.
+;; Note: Some test cases have a very large n, so the most obvious solution will exceed the time limit.
+;;
+;; (= 0 (__ 3 17 11))
+;;
+;; (= 23 (__ 10 3 5))
+;;
+;; (= 233168 (__ 1000 3 5))
+;;
+;; (= "2333333316666668" (str (__ 100000000 3 5)))
+;;
+;; (= "110389610389889610389610"
+;;   (str (__ (* 10000 10000 10000) 7 11)))
+;;
+;; (= "1277732511922987429116"
+;;   (str (__ (* 10000 10000 10000) 757 809)))
+;;
+;; (= "4530161696788274281"
+;;   (str (__ (* 10000 10000 1000) 1597 3571)))
+(fn [n a b]
+  (reduce 
+   (fn [acc e]
+     (if (or (= 0 (mod e a)) (= 0 (mod e b)))
+       (+ acc e)
+       acc))
+   0
+   (range n)))
+(fn [n a b]
+  (let [sum (fn [n d]
+              (let [n (quot n d)]
+                (*' d (/ (*' n (inc n)) 2))))]
+    (- (+ (sum (dec n) a)
+          (sum (dec n) b))
+       (sum (dec n) (* a b)))))
+(fn [n a b]
+  (let [f #(quot (dec n) %)
+        g #(/ (*' % (f %) (inc (f %))) 2)]
+    (- (+ (g a) (g b)) (g (* a b)))))
+
+
+
 (comment
   "experiment space"
+  ((fn [n a b]
+     (let [sum (fn [n d]
+                 (let [n (quot n d)]
+                   (* d (/ (* n (inc n)) 2))))]
+       (- (+ (sum (dec n) a)
+             (sum (dec n) b))
+          (sum (dec n) (* a b)))))
+   (* 1000 1000 1000) 7 11)
+  ((fn [n d]
+     (let [n (quot n d)]
+       (* d (/ (* n (inc n)) 2))))
+   9 1)
+  
+  (- 45 18 15)
+  ((fn [n a b]
+     (let [sum (fn [n d]
+                 (let [n (quot n d)]
+                   (* d (/ (* n (inc n)) 2))))]
+       (+ (- (sum (dec n) 1)
+             (sum (dec n) a)
+             (sum (dec n) b))
+          (sum (dec n) (* a b)))))
+   1000 3 5)
+  ((fn [n a b]
+     (reduce
+      (fn [acc e]
+        (if (or (= 0 (mod e a)) (= 0 (mod e b)))
+          (+ acc e)
+          acc))
+      0
+      (range n))) 100000000 3 5)
+  ((fn [col]
+     (let [col (sort col)
+           fst (first col)]
+       (if fst
+         (reduce (fn [acc e]
+                   (let [c (count acc)
+                         tmp (get-in acc [(dec c) 1])]
+                     (cond
+                       (= tmp e) acc
+                       (= (inc tmp) e) (assoc-in acc [(dec c) 1] e)
+                       :else (assoc acc c [e e]))))
+                 [[fst fst]]
+                 col)
+         []))) [1 1 1 1 1])
   (let [uce (fn [exp]
               (fn [v-map]
                 (let [f (fn f [e v-map]
