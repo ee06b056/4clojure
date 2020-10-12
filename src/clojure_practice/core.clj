@@ -1479,10 +1479,167 @@ f vs
         g #(/ (*' % (f %) (inc (f %))) 2)]
     (- (+ (g a) (g b)) (g (* a b)))))
 
+;; #177: Balancing Brackets
+;;
+;; When parsing a snippet of code it's often a good idea to do a sanity
+;; check to see if all the brackets match up. Write a function that takes 
+;; in a string and returns truthy if all square [ ] round ( ) and curly { } 
+;; brackets are properly paired and legally nested, or returns falsey otherwise.
+;;
+;; (__ "This string has no brackets.")
+;;
+;; (__ "class Test {
+;;       public static void main(String[] args) {
+;;         System.out.println(\"Hello world.\");
+;;       }
+;;     }")
+;;
+;; (not (__ "(start, end]"))
+;;
+;; (not (__ "())"))
+;;
+;; (not (__ "[ { ] } "))
+;;
+;; (__ "([]([(()){()}(()(()))(([[]]({}()))())]((((()()))))))")
+;;
+;; (not (__ "([]([(()){()}(()(()))(([[]]({}([)))())]((((()()))))))"))
+;;
+;; (not (__ "["))
+(fn [s]
+  (let [m {\( \) \[ \] \{ \}}
+        a (set "()[]{}")]
+    (empty? (reduce (fn [[top & r :as acc] c]
+                      (cond
+                        (= (m top) c) r
+                        (a c) (conj acc c)
+                        :else acc))
+                    ()
+                    s))))
+
+;; #131: Sum Some Set Subsets
+;;
+;; Given a variable number of sets of integers, create a function which returns 
+;; true iff all of the sets have a non-empty subset with an equivalent summation.
+;;
+;; (= true  (__ #{-1 1 99} 
+;;              #{-2 2 888}
+;;              #{-3 3 7777})) ; ex. all sets have a subset which sums to zero
+;;
+;; (= false (__ #{1}
+;;              #{2}
+;;              #{3}
+;;              #{4}))
+;;
+;; (= true  (__ #{1}))
+;;
+;; (= false (__ #{1 -3 51 9} 
+;;              #{0} 
+;;              #{9 2 81 33}))
+;;
+;; (= true  (__ #{1 3 5}
+;;              #{9 11 4}
+;;              #{-3 12 3}
+;;              #{-3 4 -2 10}))
+;;
+;; (= false (__ #{-1 -2 -3 -4 -5 -6}
+;;              #{1 2 3 4 5 6 7 8 9}))
+;;
+;; (= true  (__ #{1 3 5 7}
+;;              #{2 4 6 8}))
+;;
+;; (= true  (__ #{-1 3 -5 7 -9 11 -13 15}
+;;              #{1 -3 5 -7 9 -11 13 -15}
+;;              #{1 -1 2 -2 4 -4 8 -8}))
+;;
+;; (= true  (__ #{-10 9 -8 7 -6 5 -4 3 -2 1}
+;;              #{10 -9 8 -7 6 -5 4 -3 2 -1}))
+(fn [& sets]
+  (let [combination-of-set (fn [st]
+                             (remove empty?
+                                     (reduce (fn [acc e]
+                                               (concat acc (map #(conj % e) acc)))
+                                             [#{}]
+                                             st)))
+        sum-elements-in-set (fn [sts]
+                              (set (map #(apply + %) sts)))]
+    (not (empty? (apply clojure.set/intersection (map sum-elements-in-set (map combination-of-set sets)))))))
+
+;; #112: Sequs Horribilis
+;;
+;; Create a function which takes an integer and a nested collection of 
+;; integers as arguments. Analyze the elements of the input collection 
+;; and return a sequence which maintains the nested structure, and which 
+;; includes all elements starting from the head whose sum is less than or 
+;; equal to the input integer.
+;;
+;; (=  (__ 10 [1 2 [3 [4 5] 6] 7])
+;;    '(1 2 (3 (4))))
+;;
+;; (=  (__ 30 [1 2 [3 [4 [5 [6 [7 8]] 9]] 10] 11])
+;;    '(1 2 (3 (4 (5 (6 (7)))))))
+;;
+;; (=  (__ 9 (range))
+;;    '(0 1 2 3))
+;;
+;; (=  (__ 1 [[[[[1]]]]])
+;;    '(((((1))))))
+;;
+;; (=  (__ 0 [1 2 [3 [4 5] 6] 7])
+;;    '())
+;;
+;; (=  (__ 0 [0 0 [0 [0]]])
+;;    '(0 0 (0 (0))))
+;;
+;; (=  (__ 1 [-10 [1 [2 3 [4 5 [6 7 [8]]]]]])
+;;    '(-10 (1 (2 3 (4)))))
+(fn [n col]
+  (second
+   ((fn sequs [n s]
+      (loop [cnt 0, acc [] [x & xs] s]
+        (cond
+          (or (nil? x) (< n cnt)) [cnt acc]
+          (coll? x) (let [[c r] (sequs (- n cnt) x)
+                          coll (if (empty? r) acc (conj acc r))]
+                      (recur (+ c cnt) coll xs))
+          :else (recur (+ x cnt) (if (< n (+ cnt x)) acc (conj acc x)) xs))))
+    n col)))
 
 
 (comment
   "experiment space"
+  (sequential? 1)
+  
+  (let [f (fn f [n col]
+            )]
+    (f 10 [1 [2] 3 4 5 [[7 [8] 9] 11] 7]))
+  (= true (seq #{0}))
+  ((fn [& sets]
+     (let [combination-of-set (fn [st]
+                                (remove empty?
+                                        (reduce (fn [acc e]
+                                                  (concat acc (map #(conj % e) acc)))
+                                                [#{}]
+                                                st)))
+           sum-elements-in-set (fn [sts]
+                                 (set (map #(apply + %) sts)))]
+       (apply clojure.set/intersection (map sum-elements-in-set (map combination-of-set sets))))) #{-1 1 99} #{-2 2 888} #{-3 3 7777})
+  (apply + #{1 2 3})
+  (concat [#{} #{:a} #{:b} #{:a :b}] (map #(conj % :c) [#{} #{:a} #{:b} #{:a :b}]))
+  (conj '(:a) :b)
+  ((fn [s]
+     (let [res (reduce (fn [acc c]
+                         (case c
+                           "(" (update acc :r inc)
+                           ")" (update acc :r dec)
+                           "[" (update acc :s inc)
+                           "]" (update acc :s dec)
+                           "{" (update acc :c inc)
+                           "}" (update acc :c dec)
+                           acc))
+                       {:r 0, :s 0, :c 0}
+                       s)]
+       (every? #(= 0 %) (vals res)))) "dsfaasf()")
+  (reduce #(print %2) {} "heloo () [] {}")
   ((fn [n a b]
      (let [sum (fn [n d]
                  (let [n (quot n d)]
