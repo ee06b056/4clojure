@@ -1604,11 +1604,260 @@ f vs
           :else (recur (+ x cnt) (if (< n (+ cnt x)) acc (conj acc x)) xs))))
     n col)))
 
+;; #141: Tricky card games
+;;
+;; In trick-taking card games such as bridge, spades, or hearts, cards are played 
+;; in groups known as "tricks" - each player plays a single card, in order; the first 
+;; player is said to "lead" to the trick. After all players have played, one card is 
+;; said to have "won" the trick. How the winner is determined will vary by game, but 
+;; generally the winner is the highest card played in the suit that was led. Sometimes 
+;; (again varying by game), a particular suit will be designated "trump", meaning that 
+;; its cards are more powerful than any others: if there is a trump suit, and any trumps 
+;; are played, then the highest trump wins regardless of what was led.
+;;
+;; Your goal is to devise a function that can determine which of a number of cards has won 
+;; a trick. You should accept a trump suit, and return a function winner. Winner will be called 
+;; on a sequence of cards, and should return the one which wins the trick. Cards will be represented 
+;; in the format returned by Problem 128, Recognize Playing Cards: a hash-map of :suit and a numeric :rank. 
+;; Cards with a larger rank are stronger.
+;;
+;; (let [notrump (__ nil)]
+;;   (and (= {:suit :club :rank 9}  (notrump [{:suit :club :rank 4}
+;;                                            {:suit :club :rank 9}]))
+;;        (= {:suit :spade :rank 2} (notrump [{:suit :spade :rank 2}
+;;                                            {:suit :club :rank 10}]))))
+;;
+;; (= {:suit :club :rank 10} ((__ :club) [{:suit :spade :rank 2}
+;;                                        {:suit :club :rank 10}]))
+;;
+;; (= {:suit :heart :rank 8}
+;;    ((__ :heart) [{:suit :heart :rank 6} {:suit :heart :rank 8}
+;;                  {:suit :diamond :rank 10} {:suit :heart :rank 4}]))
+(fn [trump]
+  (fn winner [cards-seq]
+    (let [order {:spade 0 :diamond 0 :club 0 :heart 0}
+          suit-order (if trump
+                       (assoc order trump 1)
+                       (assoc order (-> cards-seq first :suit) 1))]
+      (->> cards-seq
+          (sort-by (juxt #(suit-order (:suit %)) :rank))
+           last))))
+
+;; #150: Palindromic Numbers
+;;
+;; A palindromic number is a number that is the same when written forwards or backwards (e.g., 3, 99, 14341).
+;; Write a function which takes an integer n, as its only argument, and returns an increasing lazy sequence 
+;; of all palindromic numbers that are not less than n.
+;; The most simple solution will exceed the time limit!
+;;
+;; (= (take 26 (__ 0))
+;;    [0 1 2 3 4 5 6 7 8 9 
+;;     11 22 33 44 55 66 77 88 99 
+;;     101 111 121 131 141 151 161])
+;;
+;; (= (take 16 (__ 162))
+;;    [171 181 191 202 
+;;     212 222 232 242 
+;;     252 262 272 282 
+;;     292 303 313 323])
+;;
+;; (= (take 6 (__ 1234550000))
+;;    [1234554321 1234664321 1234774321 
+;;     1234884321 1234994321 1235005321])
+;;
+;; (= (first (__ (* 111111111 111111111)))
+;;    (* 111111111 111111111))
+;;
+;; (= (set (take 199 (__ 0)))
+;;    (set (map #(first (__ %)) (range 0 10000))))
+;;
+;; (= true 
+;;    (apply < (take 6666 (__ 9999999))))
+;;
+;; (= (nth (__ 0) 10101)
+;;    9102019)
+(let [nextp (fn [n]
+              (let [p #(Long. %)
+                    s (str n)
+                    l (count s)
+                    m (subs s 0 (Math/ceil (/ l 2)))
+                    h (str (inc (p m)))
+                    f (fn [s] (p (str s (subs (clojure.string/reverse s) (if (even? l) 0 1)))))
+                    [a b] (map f [m h])]
+                (if (>= a n) a b)))]
+  #(iterate (comp nextp inc) (nextp %)))
+
+;; #168: Infinite Matrix
+;;
+;; In what follows, m, n, s, t denote nonnegative integers, f denotes a function that accepts 
+;; two arguments and is defined for all nonnegative integers in both arguments.
+;;
+;; In mathematics, the function f can be interpreted as an infinite matrix with infinitely many 
+;; rows and columns that, when written, looks like an ordinary matrix but its rows and columns 
+;; cannot be written down completely, so are terminated with ellipses. In Clojure, such infinite 
+;; matrix can be represented as an infinite lazy sequence of infinite lazy sequences, where the 
+;; inner sequences represent rows.
+;;
+;; Write a function that accepts 1, 3 and 5 arguments
+;;
+;; with the argument f, it returns the infinite matrix A that has the entry in the i-th row and 
+;; the j-th column equal to f(i,j) for i,j = 0,1,2,...;
+;; with the arguments f, m, n, it returns the infinite matrix B that equals the remainder of the 
+;; matrix A after the removal of the first m rows and the first n columns;
+;; with the arguments f, m, n, s, t, it returns the finite s-by-t matrix that consists of the first 
+;; t entries of each of the first s rows of the matrix B or, equivalently, that consists of the first 
+;; s entries of each of the first t columns of the matrix B.
+;;
+;; (= (take 5 (map #(take 6 %) (__ str)))
+;;    [["00" "01" "02" "03" "04" "05"]
+;;     ["10" "11" "12" "13" "14" "15"]
+;;     ["20" "21" "22" "23" "24" "25"]
+;;     ["30" "31" "32" "33" "34" "35"]
+;;     ["40" "41" "42" "43" "44" "45"]])
+;;
+;; (= (take 6 (map #(take 5 %) (__ str 3 2)))
+;;    [["32" "33" "34" "35" "36"]
+;;     ["42" "43" "44" "45" "46"]
+;;     ["52" "53" "54" "55" "56"]
+;;     ["62" "63" "64" "65" "66"]
+;;     ["72" "73" "74" "75" "76"]
+;;     ["82" "83" "84" "85" "86"]])
+;;
+;; (= (__ * 3 5 5 7)
+;;    [[15 18 21 24 27 30 33]
+;;     [20 24 28 32 36 40 44]
+;;     [25 30 35 40 45 50 55]
+;;     [30 36 42 48 54 60 66]
+;;     [35 42 49 56 63 70 77]])
+;;
+;; #(/ % (inc %2)
+;; (= (__ #(/ % (inc %2)) 1 0 6 4)
+;;    [[1/1 1/2 1/3 1/4]
+;;     [2/1 2/2 2/3 1/2]
+;;     [3/1 3/2 3/3 3/4]
+;;     [4/1 4/2 4/3 4/4]
+;;     [5/1 5/2 5/3 5/4]
+;;     [6/1 6/2 6/3 6/4]])
+;;
+;; (= (class (__ (juxt bit-or bit-xor)))
+;;    (class (__ (juxt quot mod) 13 21))
+;;    (class (lazy-seq)))
+;;
+;; (= (class (nth (__ (constantly 10946)) 34))
+;;    (class (nth (__ (constantly 0) 5 8) 55))
+;;    (class (lazy-seq)))
+;;
+;; (= (let [m 377 n 610 w 987
+;;          check (fn [f s] (every? true? (map-indexed f s)))
+;;          row (take w (nth (__ vector) m))
+;;          column (take w (map first (__ vector m n)))
+;;          diagonal (map-indexed #(nth %2 %) (__ vector m n w w))]
+;;      (and (check #(= %2 [m %]) row)
+;;           (check #(= %2 [(+ m %) n]) column)
+;;           (check #(= %2 [(+ m %) (+ n %)]) diagonal)))
+;;    true)
+(fn infinite-matrix
+  ([f] (infinite-matrix f 0 0))
+  ([f m n s t] (take s (map #(take t %) (infinite-matrix f m n))))
+  ([f m n]
+   (let [lazy-row (fn lazy-row [f row column]
+                    (lazy-seq (cons (f row column) (lazy-row f row (inc column)))))
+         lazy-matrix (fn lazy-matrix [f row column]
+                       (lazy-seq (cons (lazy-row f row column) (lazy-matrix f (inc row) column))))]
+     (lazy-matrix f m n))))
+
+;; #195: Parentheses... Again
+;;
+;; In a family of languages like Lisp, having balanced parentheses is a defining feature 
+;; of the language. Luckily, Lisp has almost no syntax, except for these "delimiters" -- 
+;; and that hardly qualifies as "syntax", at least in any useful computer programming sense.
+;;
+;; It is not a difficult exercise to find all the combinations of well-formed parentheses 
+;; if we only have N pairs to work with. For instance, if we only have 2 pairs, we only have two 
+;; possible combinations: "()()" and "(())". Any other combination of length 4 is ill-formed. Can 
+;; you see why?
+;;
+;; Generate all possible combinations of well-formed parentheses of length 2n (n pairs of parentheses). 
+;; For this problem, we only consider '(' and ')', but the answer is similar if you work with only {} 
+;; or only [].
+;;
+;; There is an interesting pattern in the numbers!
+;;
+;; (= [#{""} #{"()"} #{"()()" "(())"}] (map (fn [n] (__ n)) [0 1 2]))
+;;
+;; (= #{"((()))" "()()()" "()(())" "(())()" "(()())"} (__ 3))
+;;
+;; (= 16796 (count (__ 10)))
+;;
+;; (= (nth (sort (filter #(.contains ^String % "(()()()())") (__ 9))) 6) "(((()()()())(())))")
+;;
+;; (= (nth (sort (__ 12)) 5000) "(((((()()()()()))))(()))")
+(fn parentheses
+  ([n] (parentheses n 0 0 ""))
+  ([n o c s]
+   (clojure.set/union
+    (when (= c n) #{s})
+    (when (< o n) (parentheses n (inc o) c (str s "(")))
+    (when (and (< c o) (< c n)) (parentheses n o (inc c) (str s ")"))))))
+
 
 (comment
   "experiment space"
+  ((fn parentheses
+     ([n] (parentheses n 0 0 ""))
+     ([n o c s]
+      (clojure.set/union
+       (when (= c n) #{s})
+       (when (< o n) (parentheses n (inc o) c (str s "(")))
+       (when (and (< c o) (< c n)) (parentheses n o (inc c) (str s ")")))))) 3)
+  (clojure.set/union #{1 2 3} #{3 4 5} nil)
+  (apply str [])
+  ((fn infinite-matrix
+     ([f] (infinite-matrix f 0 0))
+     ([f m n s t] (take s (map #(take t %) (infinite-matrix f m n))))
+     ([f m n]
+      (let [lazy-row (fn lazy-row [f row column]
+                       (lazy-seq (cons (f row column) (lazy-row f row (inc column)))))
+            lazy-matrix (fn lazy-matrix [f row column]
+                          (lazy-seq (cons (lazy-row f row column) (lazy-matrix f (inc row) column))))]
+        (lazy-matrix f m n))))
+   str)
+  (let [f (fn f [n]
+            (lazy-seq (cons n (f (inc n)))))]
+    (take 10 (f 0)))
+  (let [ls (fn ls [f i j]
+             (lazy-seq (cons (f i j) (ls f i (inc j)))))]
+    (take 10 (ls str 0 0)))
+  (let [lazy-row (fn lazy-row [f row column]
+                   (lazy-seq (cons (f row column) (lazy-row f row (inc column)))))
+        lazy-matrix (fn lazy-matrix [f row column]
+                      (lazy-seq (cons (lazy-row f row column) (lazy-matrix f (inc row) column))))]
+    (take 4 (map #(take 6 %) (lazy-matrix str 2 3))))
+  (str 1 2)
+  ((let [nextp (fn [n]
+                 (let [p #(Long. %)
+                       s (str n)
+                       l (count s)
+                       m (subs s 0 (Math/ceil (/ l 2)))
+                       h (str (inc (p m)))
+                       f (fn [s] (p (str s (subs (clojure.string/reverse s) (if (even? l) 0 1)))))
+                       [a b] (map f [m h])]
+                   (if (>= a n) a b)))]
+     #(iterate (comp nextp inc) (nextp %))) 10)
+  (let [notrump ((fn [trump]
+                   (fn winner [cards-seq]
+                     (let [order {:spade 0 :diamond 0 :club 0 :heart 0}
+                           suit-order (if trump
+                                        (assoc order trump 1)
+                                        (assoc order (-> cards-seq first :suit) 1))]
+                       (->> cards-seq
+                            (sort-by (juxt #(suit-order (:suit %)) :rank))
+                            last)))) nil)]
+    (notrump [{:suit :club :rank 4}
+              {:suit :club :rank 9}]))
+  (sort [[2 1] [1 3] [1 1]])
   (sequential? 1)
-  
+  (update {:club 1} :club dec)
   (let [f (fn f [n col]
             )]
     (f 10 [1 [2] 3 4 5 [[7 [8] 9] 11] 7]))
@@ -1835,4 +2084,14 @@ f vs
                 (gcd b (mod a b))))
         isCoprime (fn [a b]
                     (= 1 (gcd a b)))]
-    (gcd 4 2)))
+    (gcd 4 2))
+  (fn [n col]
+    (letfn [(helper
+             [n col]
+             (loop [sum 0 acc [] [x & xs] col]
+               (cond
+                 (or (nil? x) (> sum n)) [sum acc]
+                 (coll? x) (let [[n acc] (helper (- n sum) x)]
+                             (recur ))
+                 )))]))
+  )
