@@ -1800,9 +1800,61 @@ f vs
     (when (< o n) (parentheses n (inc o) c (str s "(")))
     (when (and (< c o) (< c n)) (parentheses n o (inc c) (str s ")"))))))
 
+;; #53: Longest Increasing Sub-Seq
+;;
+;; Given a vector of integers, find the longest consecutive sub-sequence of increasing numbers. 
+;; If two sub-sequences have the same length, use the one that occurs first. An increasing 
+;; sub-sequence must have a length of 2 or greater to qualify.
+;;
+;; (= (__ [1 0 1 2 3 0 4 5]) [0 1 2 3])
+;;
+;; (= (__ [5 6 1 3 2 7]) [5 6])
+;;
+;; (= (__ [2 3 3 4 5]) [3 4 5])
+;;
+;; (= (__ [7 6 5 4]) [])
+(fn [col]
+  (let [seen (atom true)
+        pre-v (atom nil)
+        seq-list (partition-by #(cond
+                           (nil? @pre-v) (do (reset! pre-v %) @seen)
+                           (= 1 (- % @pre-v)) (do (reset! pre-v %) @seen)
+                           :else (do (reset! pre-v %) (reset! seen (not @seen)))) 
+                        col)]
+    (reduce (fn [acc e]
+              (cond
+                (= 1 (count e)) acc
+                (> (count e) (count acc)) e
+                :else acc))
+             []
+             seq-list)))
 
 (comment
   "experiment space"
+  ((fn [col]
+     (let [seen (atom true)
+           pre-v (atom nil)
+           seq-list (partition-by #(cond
+                                     (nil? @pre-v) (do (reset! pre-v %) @seen)
+                                     (= 1 (- % @pre-v)) (do (reset! pre-v %) @seen)
+                                     :else (do (reset! pre-v %) (reset! seen (not @seen))))
+                                  col)]
+       (reduce (fn [acc e]
+                 (cond
+                   (= 1 (count e)) acc
+                   (> (count e) (count acc)) e
+                   :else acc))
+               []
+               seq-list))) [1 0 1 2 3 0 4 5])
+  (let [seen (atom true)
+        pre-v (atom nil)]
+    (partition-by #(cond
+                     (nil? @pre-v) (do (reset! pre-v %) @seen)
+                     (= 1 (- % @pre-v)) (do (reset! pre-v %) @seen)
+                     :else (do (reset! pre-v %) (reset! seen (not @seen))))
+                  [2 1 0 1 2 3 5 1]))
+  (let [a (atom false)]
+    (reset! a (not @a)))
   ((fn parentheses
      ([n] (parentheses n 0 0 ""))
      ([n o c s]
@@ -2087,11 +2139,11 @@ f vs
     (gcd 4 2))
   (fn [n col]
     (letfn [(helper
-             [n col]
-             (loop [sum 0 acc [] [x & xs] col]
-               (cond
-                 (or (nil? x) (> sum n)) [sum acc]
-                 (coll? x) (let [[n acc] (helper (- n sum) x)]
-                             (recur ))
-                 )))]))
+              [n col]
+              (loop [sum 0 acc [] [x & xs] col]
+                (cond
+                  (or (nil? x) (> sum n)) [sum acc]
+                  (coll? x) (let [[n acc] (helper (- n sum) x)]
+                              (recur ))
+                  )))]))
   )
