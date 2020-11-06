@@ -1829,8 +1829,87 @@ f vs
              []
              seq-list)))
 
+;; #73: Analyze a Tic-Tac-Toe Board
+;;
+;; A tic-tac-toe board is represented by a two dimensional vector. X is represented by :x, 
+;; O is represented by :o, and empty is represented by :e. A player wins by placing three Xs 
+;; or three Os in a horizontal, vertical, or diagonal row. Write a function which analyzes 
+;; a tic-tac-toe board and returns :x if X has won, :o if O has won, and nil if neither player has won.
+;;
+;; (= nil (__ [[:e :e :e]
+;;             [:e :e :e]
+;;             [:e :e :e]]))
+;;
+;; (= :x (__ [[:x :e :o]
+;;            [:x :e :e]
+;;            [:x :e :o]]))
+;;
+;; (= :o (__ [[:e :x :e]
+;;            [:o :o :o]
+;;            [:x :e :x]]))
+;;
+;; (= nil (__ [[:x :e :o]
+;;             [:x :x :e]
+;;             [:o :x :o]]))
+;;
+;; (= :x (__ [[:x :e :e]
+;;            [:o :x :e]
+;;            [:o :e :x]]))
+;;
+;; (= :o (__ [[:x :e :o]
+;;            [:x :o :e]
+;;            [:o :e :x]]))
+;;
+;; (= nil (__ [[:x :o :x]
+;;             [:x :o :x]
+;;             [:o :x :o]]))
+(fn [board]
+  (letfn [(line-winner [line]
+            (cond
+              (every? #(= :x %) line) :x
+              (every? #(= :o %) line) :o
+              :else nil))
+          (get-rows [board]
+            (apply (partial map vector) board))
+          (get-diagonal [board]
+            [(vec (map get-in (repeat board) [[0 0] [1 1] [2 2]]))
+             (vec (map get-in (repeat board) [[0 2] [1 1] [2 0]]))])]
+    (prn (get-diagonal board))
+    (some line-winner (concat board (get-rows board) (get-diagonal board)))))
+
 (comment
   "experiment space"
+  ((fn [board]
+     (letfn [(line-winner [line]
+               (cond
+                 (every? #(= :x %) line) :x
+                 (every? #(= :o %) line) :o
+                 :else nil))
+             (get-rows [board]
+               (apply (partial map vector) board))
+             (get-diagonal [board]
+               [(vec (map get-in (repeat board) [[0 0] [1 1] [2 2]]))
+                (vec (map get-in (repeat board) [[0 2] [1 1] [2 0]]))])]
+       (prn (get-diagonal board))
+       (some line-winner (concat board (get-rows board) (get-diagonal board))))) [[:e :x :e]
+                                                                                  [:o :o :o]
+                                                                                  [:x :e :x]])
+  (every? #(= :o %) [:e :o :o])
+  (let [board [[:e :x :e]
+               [:o :o :o]
+               [:x :e :x]]
+        get-rows (fn [board]
+                   (apply (partial map vector) board))
+        line-winner (fn [line] (cond
+                                 (every? :x line) :x
+                                 (every? :o line) :o
+                                 :else nil))]
+    (line-winner [:o :o :o]))
+  (let [board [[1 2 3] [4 5 6] [7 8 9]]]
+    (map get-in [[0 0] [1 1] [2 2]] (repeat board)))
+  (apply (partial map vector) [[1 2 3] [4 5 6] [7 8 9]])
+  (get [1 2 3] 0)
+  (map vector [1 2 3] [4 5 6] [7 8 9])
   ((fn [col]
      (let [seen (atom true)
            pre-v (atom nil)
@@ -1910,8 +1989,7 @@ f vs
   (sort [[2 1] [1 3] [1 1]])
   (sequential? 1)
   (update {:club 1} :club dec)
-  (let [f (fn f [n col]
-            )]
+  (let [f (fn f [n col])]
     (f 10 [1 [2] 3 4 5 [[7 [8] 9] 11] 7]))
   (= true (seq #{0}))
   ((fn [& sets]
@@ -1953,7 +2031,7 @@ f vs
      (let [n (quot n d)]
        (* d (/ (* n (inc n)) 2))))
    9 1)
-  
+
   (- 45 18 15)
   ((fn [n a b]
      (let [sum (fn [n d]
@@ -2144,6 +2222,4 @@ f vs
                 (cond
                   (or (nil? x) (> sum n)) [sum acc]
                   (coll? x) (let [[n acc] (helper (- n sum) x)]
-                              (recur ))
-                  )))]))
-  )
+                              (recur)))))])))
