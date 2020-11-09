@@ -1877,8 +1877,81 @@ f vs
     (prn (get-diagonal board))
     (some line-winner (concat board (get-rows board) (get-diagonal board)))))
 
+;; #79: Triangle Minimal Path
+;;
+;; Write a function which calculates the sum of the minimal path through a triangle. 
+;; The triangle is represented as a collection of vectors. The path should start at 
+;; the top of the triangle and move to an adjacent number on the next row until the 
+;; bottom of the triangle is reached.
+;;
+;; (= 7 (__ '([1]
+;;           [2 4]
+;;          [5 1 4]
+;;         [2 3 4 5]))) ; 1->2->1->3
+;;
+;; (= 20 (__ '([3]
+;;            [2 4]
+;;           [1 9 3]
+;;          [9 9 2 4]
+;;         [4 6 6 7 8]
+;;        [5 7 3 5 1 4]))) ; 3->4->3->2->7->1
+(fn [triangle]
+  (let [f (fn [acc col]
+            (let [smaller-sum-list (fn [[col1 col2]]
+                                     (let [sum1 (apply + col1)
+                                           sum2 (apply + col2)]
+                                       (if (>= sum1 sum2)
+                                         col2
+                                         col1)))
+                  smaller-list (map smaller-sum-list (partition 2 1 acc))]
+              (map conj smaller-list col)))
+        r-t (reverse triangle)]
+    (apply + (first (reduce f (map vector (first r-t)) (rest r-t))))))
+;; shorter one
+(fn [triangle]
+  (let [f (fn [acc col]
+            (let [smaller-list (map (fn [[a b]] (if (<= a b) a b)) (partition 2 1 acc))]
+              (map + smaller-list col)))
+        triangle-r (reverse triangle)]
+    (first (reduce f (first triangle-r) (rest triangle-r)))))
+
+
 (comment
   "experiment space"
+  ((fn [triangle]
+     (let [f (fn [acc col]
+               (let [smaller-sum-list (fn [[col1 col2]]
+                                        (let [sum1 (apply + col1)
+                                              sum2 (apply + col2)]
+                                          (if (>= sum1 sum2)
+                                            col2
+                                            col1)))
+                     smaller-list (map smaller-sum-list (partition 2 1 acc))]
+                 (map conj smaller-list col)))
+           r-t (reverse triangle)]
+       (reverse (first (reduce f (map vector (first r-t)) (rest r-t)))))) 
+   '([3]
+     [2 4]
+     [1 9 3]
+     [9 9 2 4]
+     [4 6 6 7 8]
+     [5 7 3 5 1 4]))
+  (partition 2 1 [1 2 3 4 5])
+  (let [triangle '([1]
+                   [2 4]
+                   [5 1 4]
+                   [2 3 4 5])
+        r-t (reverse triangle)
+        acc (map vector (first r-t))
+        smaller-sum-list (fn [[col1 col2]]
+                           (let [sum1 (apply + col1)
+                                 sum2 (apply + col2)]
+                             (if (>= sum1 sum2)
+                               col2
+                               col1)))]
+    #_(partition 2 1 acc)
+    (map conj (map smaller-sum-list (partition 2 1 acc)) [5 1 4]))
+  (map list [1 2 3 4])
   ((fn [board]
      (letfn [(line-winner [line]
                (cond
