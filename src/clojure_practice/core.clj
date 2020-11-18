@@ -1915,6 +1915,27 @@ f vs
         triangle-r (reverse triangle)]
     (first (reduce f (first triangle-r) (rest triangle-r)))))
 
+;; #92: Read Roman numerals
+;;
+;; Roman numerals are easy to recognize, but not everyone knows all the rules necessary 
+;; to work with them. Write a function to parse a Roman-numeral string and return the 
+;; number it represents.
+;; You can assume that the input will be well-formed, in upper-case, and follow the 
+;; subtractive principle. You don't need to handle any numbers greater than MMMCMXCIX (3999), 
+;; the largest number representable with ordinary letters.
+;;
+;; (= 14 (__ "XIV"))
+;;
+;; (= 827 (__ "DCCCXXVII"))
+;;
+;; (= 3999 (__ "MMMCMXCIX"))
+;;
+;; (= 48 (__ "XLVIII"))
+(fn [s]
+  (let [numerals {\M 1000 \D 500 \C 100 \L 50 \X 10 \V 5 \I 1}
+        nums (partition 2 1 (concat (map numerals s) [0]))]
+    (reduce (fn [acc [a b]] ((if (>= a b) + -) acc a)) 0 nums)))
+
 
 (comment
   "experiment space"
