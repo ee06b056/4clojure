@@ -1936,9 +1936,62 @@ f vs
         nums (partition 2 1 (concat (map numerals s) [0]))]
     (reduce (fn [acc [a b]] ((if (>= a b) + -) acc a)) 0 nums)))
 
+;; #84: Transitive Closure
+;;
+;; Write a function which generates the transitive closure of a binary relation. 
+;; The relation will be represented as a set of 2 item vectors.
+;;
+;; (let [divides #{[8 4] [9 3] [4 2] [27 9]}]
+;;   (= (__ divides) #{[4 2] [8 4] [8 2] [9 3] [27 9] [27 3]}))
+;;
+;; (let [more-legs
+;;       #{["cat" "man"] ["man" "snake"] ["spider" "cat"]}]
+;;   (= (__ more-legs)
+;;      #{["cat" "man"] ["cat" "snake"] ["man" "snake"]
+;;        ["spider" "cat"] ["spider" "man"] ["spider" "snake"]}))
+;;
+;; (let [progeny
+;;       #{["father" "son"] ["uncle" "cousin"] ["son" "grandson"]}]
+;;   (= (__ progeny)
+;;      #{["father" "son"] ["father" "grandson"]
+;;        ["uncle" "cousin"] ["son" "grandson"]}))
+(fn [relations]
+  (let [roots (into {} (map (fn [[k vs]] [k (mapv second vs)])
+                            (group-by first relations)))
+        children (fn children [e]
+                   (let [t (get roots e [])]
+                     (concat t (mapcat children t))))]
+    (set (mapcat (fn [e]
+                   (mapv (fn [a b] [a b]) (repeat e) (children e)))
+                 (keys roots)))))
+
+
 
 (comment
   "experiment space"
+  ((fn [relations]
+     (let [roots (into {} (map (fn [[k vs]] [k (mapv second vs)])
+                      (group-by first relations)))
+           children (fn children [relations e]
+                      (let [t (get relations e [])]
+                        (concat t (mapcat (partial children roots) t))))]
+       (set (mapcat (fn [e]
+                 (let [childs (children roots e)]
+                   (mapv (fn [a b] [a b]) (repeat e) (children roots e))))
+               (keys roots)))))
+   #{[8 4] [9 3] [4 2] [27 9]})
+  (let [rels #{[8 4] [9 3] [4 2] [27 9]}
+        roots (into {} (map (fn [[k vs]] [k (mapv second vs)])
+                            (group-by first rels)))
+        children (fn children [relations e]
+                   (let [t (get relations e [])]
+                     (concat t (mapcat (partial children roots) t))))]
+    (map (partial children roots) (keys roots))
+    roots
+    (mapcat (fn [e]
+              (let [childs (children roots e)]
+                (mapv (fn [a b] [a b]) (repeat e) (children roots e))))
+            (keys roots)))
   ((fn [triangle]
      (let [f (fn [acc col]
                (let [smaller-sum-list (fn [[col1 col2]]
